@@ -186,6 +186,7 @@ def harvest_images(path, context):
     if "IMAGE_PROCESS_ENCODING" not in context:
         context["IMAGE_PROCESS_ENCODING"] = "utf-8"
 
+    print('path,', path)
     with open(path, "r+", encoding=context["IMAGE_PROCESS_ENCODING"]) as f:
         res = harvest_images_in_fragment(f, context)
         f.seek(0)
@@ -247,7 +248,9 @@ def harvest_images_in_fragment(fragment, settings):
 def compute_paths(img, settings, derivative):
     process_dir = settings["IMAGE_PROCESS_DIR"]
     img_src = urlparse(img["src"])
-    img_src_path = url2pathname(img_src.path[1:])
+    raw = img_src.path
+    if raw[0] == "/": raw = raw[1:]
+    img_src_path = url2pathname(raw)
     img_src_dirname, filename = os.path.split(img_src_path)
     derivative_path = os.path.join(process_dir, derivative)
     base_url = urljoin(img_src.geturl(), pathname2url(derivative_path))
@@ -355,8 +358,10 @@ def convert_div_to_picture_tag(soup, img, group, settings, derivative):
 
         url_path, s["filename"] = os.path.split(s["url"])
         s["base_url"] = os.path.join(url_path, process_dir, derivative)
+        raw = s["base_url"]
+        if raw[0] == "/": raw = raw[1:]
         s["base_path"] = os.path.join(
-            settings["OUTPUT_PATH"], s["base_url"][1:]
+            settings["OUTPUT_PATH"], raw
         )
 
     # If default is not None, change default img source to the image
@@ -382,8 +387,9 @@ def convert_div_to_picture_tag(soup, img, group, settings, derivative):
 
         elif isinstance(default[1], list):
             default_item_name = "default"
-
-            source = os.path.join(settings["PATH"], default_source["url"][1:])
+            raw = default_source["url"]
+            if raw[0] == "/": raw = raw[1:]
+            source = os.path.join(settings["PATH"], raw)
             destination = os.path.join(
                 s["base_path"],
                 default_source_name,
@@ -418,8 +424,10 @@ def convert_div_to_picture_tag(soup, img, group, settings, derivative):
                     src[0],
                 )
             )
-
-            source = os.path.join(settings["PATH"], s["url"][1:])
+            
+            raw = s["url"]
+            if raw[0] == "/": raw = raw[1:]
+            source = os.path.join(settings["PATH"], raw)
             destination = os.path.join(
                 s["base_path"], s["name"], src[0], s["filename"]
             )
@@ -476,8 +484,10 @@ def process_picture(soup, img, group, settings, derivative):
         s["base_url"] = os.path.join(
             url_path, process_dir, derivative
         ).replace("\\", "/")
+        raw = s["base_url"]
+        if raw[0] == "/": raw = raw[1:]
         s["base_path"] = os.path.join(
-            settings["OUTPUT_PATH"], s["base_url"][1:]
+            settings["OUTPUT_PATH"], s["base_url"]
         )
 
     # If default is not None, change default img source to the image
@@ -503,7 +513,9 @@ def process_picture(soup, img, group, settings, derivative):
 
         elif isinstance(default[1], list):
             default_item_name = "default"
-            source = os.path.join(settings["PATH"], default_source["url"][1:])
+            raw = default_source["url"]
+            if raw[0] == "/": raw = raw[1:]
+            source = os.path.join(settings["PATH"], raw)
             destination = os.path.join(
                 s["base_path"],
                 default_source_name,
@@ -534,8 +546,10 @@ def process_picture(soup, img, group, settings, derivative):
                     src[0],
                 )
             )
-
-            source = os.path.join(settings["PATH"], s["url"][1:])
+            
+            raw = s["url"]
+            if raw[0] == "/": raw = raw[1:]
+            source = os.path.join(settings["PATH"], raw)
             destination = os.path.join(
                 s["base_path"], s["name"], src[0], s["filename"]
             )
@@ -576,7 +590,7 @@ def process_image(image, settings):
         or not os.path.exists(image[1])
         or os.path.getmtime(image[0]) > os.path.getmtime(image[1])
     ):
-
+        print("path", image[0])
         i = Image.open(image[0])
 
         for step in image[2]:
